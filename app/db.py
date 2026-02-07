@@ -1,18 +1,33 @@
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime
-from sqlalchemy.orm import declarative_base, sessionmaker
 import os
+from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime
+from sqlalchemy.orm import sessionmaker, declarative_base
+from dotenv import load_dotenv
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./stocks.db")
+# Load .env locally (Koyeb auto-loads env vars)
+load_dotenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL is not set")
 
 engine = create_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
+    pool_pre_ping=True,   # reconnect if DB drops
 )
 
-SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+SessionLocal = sessionmaker(
+    bind=engine,
+    autocommit=False,
+    autoflush=False,
+)
 
 Base = declarative_base()
 
+
+# ===============================
+# MODELS
+# ===============================
 
 class HistoricalPrice(Base):
     __tablename__ = "historical_prices"
@@ -35,4 +50,7 @@ class PriceAlert(Base):
     triggered = Column(Integer, default=0)
 
 
+# ===============================
+# CREATE TABLES
+# ===============================
 Base.metadata.create_all(bind=engine)
