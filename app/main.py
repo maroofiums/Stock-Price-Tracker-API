@@ -4,6 +4,7 @@ load_dotenv()
 from fastapi import FastAPI, HTTPException, Query, BackgroundTasks
 from typing import List
 import asyncio
+import uvicorn
 
 from app.services import get_price, check_alerts
 from app.models import PriceResponse, AlertRequest
@@ -68,3 +69,11 @@ def create_alert(alert: AlertRequest, bg: BackgroundTasks):
 
     bg.add_task(check_alerts)
     return {"message": "Alert created"}
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=port
+    )
